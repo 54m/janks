@@ -6,7 +6,7 @@
  Japanese Bank Search
  
  # 使い方
-example参照
+[Example](https://github.com/54mch4n/janks/example/main.go)
  
 # License
 MIT
