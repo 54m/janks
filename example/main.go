@@ -9,7 +9,7 @@ func main() {
 	if bank, err := janks.SearchBankByCode("0035", "001"); err != nil {
 		fmt.Println(err)
 	} else {
-		fmt.Printf("%#v\n", bank)
+		fmt.Printf("%+v\n", bank)
 	}
 
 	bank := janks.NewJapaneseBankSearch()

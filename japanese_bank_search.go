@@ -10,11 +10,12 @@ import (
 	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/knightso/base/errors"
+	"golang.org/x/xerrors"
 )
 
 var defaultJanks *Bank
 
+// Bank bank information
 type Bank struct {
 	BankName       string
 	BankNameHalf   string
@@ -26,21 +27,24 @@ type Bank struct {
 
 func init() {
 	defaultJanks = NewJapaneseBankSearch()
-	_, _ = SearchBankByCode, SearchBankByName
 }
 
+// NewJapaneseBankSearch constructor
 func NewJapaneseBankSearch() *Bank {
 	return new(Bank)
 }
 
+// SearchBankByCode search for a bank by bank code
 func SearchBankByCode(bc, sc string) (*Bank, error) {
 	return defaultJanks.SearchBankByCode(bc, sc)
 }
 
+// SearchBankByName search for a bank by bank name and branch name
 func SearchBankByName(bc, sc string) (*Bank, error) {
 	return defaultJanks.SearchBankByName(bc, sc)
 }
 
+// SearchBankByCode search for a bank by bank code
 func (src *Bank) SearchBankByCode(bc, sc string) (*Bank, error) {
 	form := url.Values{}
 	form.Add("inbc", bc)
@@ -85,6 +89,7 @@ func (src *Bank) SearchBankByCode(bc, sc string) (*Bank, error) {
 	return src.responseCheck()
 }
 
+// SearchBankByName search for a bank by bank name and branch name
 func (src *Bank) SearchBankByName(bc, sc string) (_ *Bank, err error) {
 	form := url.Values{}
 	form.Add("wd", bc)
@@ -114,7 +119,7 @@ func (src *Bank) SearchBankByName(bc, sc string) (_ *Bank, err error) {
 	doc.Find("table > tbody > tr > td.g1").Each(func(n int, s *goquery.Selection) {
 		text := s.Text()
 		if text == " " {
-			err = setError(errors.New("SearchBankByNameError: Not found. [bank]"))
+			err = setError(xerrors.New("SearchBankByNameError: Not found. [bank]"))
 			return
 		} else {
 			switch n {
@@ -133,7 +138,7 @@ func (src *Bank) SearchBankByName(bc, sc string) (_ *Bank, err error) {
 	form = url.Values{}
 	form.Add("wd", sc)
 	if query, ok := doc.Find("table > tbody > tr > td.g3 > form > input[type=hidden]").Attr("value"); !ok {
-		return nil, setError(errors.New("Not found."))
+		return nil, setError(xerrors.New("Not found."))
 	} else {
 		form.Add("pz", query)
 	}
@@ -162,7 +167,7 @@ func (src *Bank) SearchBankByName(bc, sc string) (_ *Bank, err error) {
 	doc.Find("table > tbody > tr > td.g1").Each(func(n int, s *goquery.Selection) {
 		text := s.Text()
 		if text == " " {
-			err = setError(errors.New("Not found. [branch]"))
+			err = setError(xerrors.New("Not found. [branch]"))
 		} else {
 			switch n {
 			case 0:
@@ -181,17 +186,17 @@ func (src *Bank) SearchBankByName(bc, sc string) (_ *Bank, err error) {
 	return src.responseCheck()
 }
 
-func (src Bank) responseCheck() (*Bank, error) {
+func (src *Bank) responseCheck() (*Bank, error) {
 	ind := reflect.Indirect(reflect.ValueOf(src))
 	for i := 0; i < ind.NumField(); i++ {
 		switch ind.Field(i).String() {
 		case "":
-			return nil, setError(errors.New("Empty character."), 2)
+			return nil, setError(xerrors.New("Empty character."), 2)
 		case "該当するデータはありません":
-			return nil, setError(errors.New("No found data."), 2)
+			return nil, setError(xerrors.New("No found data."), 2)
 		}
 	}
-	return &src, nil
+	return src, nil
 }
 
 func setError(err error, nest ...interface{}) error {
@@ -202,5 +207,5 @@ func setError(err error, nest ...interface{}) error {
 	pc, _, _, _ := runtime.Caller(skip)
 	sp := strings.Split(runtime.FuncForPC(pc).Name(), ".")
 	fn := sp[len(sp)-1]
-	return errors.Errorf("%sError: %s", fn, err.Error())
+	return xerrors.Errorf("%sError: %s", fn, err.Error())
 }
