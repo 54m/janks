@@ -1,6 +1,6 @@
-module github.com/54mch4n/janks
+module github.com/54m/janks
 
-go 1.14
+go 1.12
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.0
